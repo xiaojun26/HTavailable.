@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ht Visual Design Studio - 次世代商业美学</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap');
+        
+        body {
+            font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            scroll-behavior: smooth;
+        }
+        .font-serif-sc {
+            font-family: 'Noto Serif SC', serif;
+        }
+        /* 隐藏滚动条但保留功能 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        .noise-bg {
+            background-image: url('https://grainy-gradients.vercel.app/noise.svg');
+        }
+        .aspect-3-4 {
+            aspect-ratio: 3 / 4;
+        }
+    </style>
+</head>
+<body class="bg-[#F9F8F6] text-[#1A1A1A] selection:bg-blue-100 selection:text-blue-900">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // 图标组件
+        const Icon = ({ name, className = "w-5 h-5" }) => {
+            const iconsMap = {
+                Sparkles: <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>,
+                Languages: <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>,
+                ArrowUpRight: <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>,
+                Focus: <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg>,
+                User: <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+                ShoppingBag: <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>,
+                ShieldCheck: <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>,
+                Zap: <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>,
+                Maximize2: <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+            };
+            return iconsMap[name] || null;
+        };
+
+        const App = () => {
+            const [lang, setLang] = useState('zh');
+            const [activeTab, setActiveTab] = useState('全部');
+            const [isScrolled, setIsScrolled] = useState(false);
+
+            // 多语言文案配置 - 突出5D4、f/8、无畸变、纯净商用等核心卖点
+            const translations = {
+                zh: {
+                    studioName: "Ht视觉设计工作室",
+                    navIntro: "核心视觉",
+                    navStandards: "工业级标准",
+                    navPortfolio: "商业大片集",
+                    navConnect: "业务洽谈",
+                    heroBadge: "资深商业 AI 视觉引擎 / 殿堂级大片质感",
+                    heroTitle1: "重塑",
+                    heroTitle2: "次世代高阶美学",
+                    heroDesc: "深耕 8K 超高清商业影像与先锋美学。我们以顶级时尚大刊及巨匠摄影师的光影逻辑为基底，精准模拟佳能5D4实拍色深与 f/8 影棚立体柔光。从巴黎世家（Balenciaga）的冷峻机能、YSL的凌厉剪裁到 Dior 的优雅先锋，为您输出无损、零畸变、直接落地的高阶商业视觉全案。",
+                    exploreWorks: "鉴赏案例",
+                    trusted: "已为 100+ 顶尖品牌与跨境电商赋能",
+                    standardsTitle: "不妥协的商业级交付标准",
+                    standardsDesc: "摒弃粗劣的 AI 生成感，我们追求的是对真实摄影艺术的像素级复刻。所有输出均完美贴合真实人体结构与面料物理属性，满足全网各渠道最严苛的商用要求。",
+                    standard1: "佳能5D4实拍光影",
+                    standard1Desc: "复刻5D4色彩科学与f/8大景深，均匀柔和的立体柔光控制，无过曝与暗角，画面干净通透。",
+                    standard2: "1:7.5 完美人体结构",
+                    standard2Desc: "严控1:7.5黄金头身比，正面微侧站姿，五官绝对对称，肤质真实。彻底告别扭曲与多余肢体畸形。",
+                    standard3: "1:1 服装版型还原",
+                    standard3Desc: "完美复刻原版剪裁。面料质感真实清晰，褶皱随人体自然生成，完美贴合，无穿模与拉伸断裂。",
+                    standard4: "极简商用纯净度",
+                    standard4Desc: "采用纯白/高级灰等极简室内实景。无水印、文字、Logo或杂物，画面绝对干净，直出即用。",
+                    standard5: "出海级审美定制",
+                    standard5Desc: "针对欧美、日韩等全球市场定制化超模面孔与高级感调性，姿态自然放松，全方位赋能品牌出海。",
+                    standard6: "8K 商业级极清输出",
+                    standard6Desc: "支持超大幅海报打印与详情页超精细局部放大，每一寸面料肌理与五金细节皆分毫毕现。",
+                    portfolioTitle: "商业大片集 / Campaigns",
+                    categories: ["全部", "秀场先锋", "跨境电商", "产品微距", "服装实拍"],
+                    contactTitle: "开启您的",
+                    contactTitle2: "视觉升维之旅",
+                    contactEmail: "商务邮箱",
+                    contactServices: "服务矩阵",
+                    service1: "• 8K 服装模特实拍大片",
+                    service2: "• 跨境电商高阶视觉全案",
+                    service3: "• 先锋服饰/产品 3D 质感呈现",
+                    service4: "• 品牌 S 级创意海报定制",
+                    formName: "您的称呼",
+                    formContact: "联系方式",
+                    formDetails: "项目诉求",
+                    formPlaceholderName: "例如：陈先生 / 品牌主理人",
+                    formPlaceholderContact: "微信或手机号",
+                    formSubmit: "提交业务咨询",
+                    footerRights: "© 2024 Ht视觉设计工作室. 版权所有."
+                },
+                en: {
+                    studioName: "Ht Visual Design",
+                    navIntro: "Vision",
+                    navStandards: "Standards",
+                    navPortfolio: "Campaigns",
+                    navConnect: "Connect",
+                    heroBadge: "Senior Commercial AI Visual Engine",
+                    heroTitle1: "Redefining",
+                    heroTitle2: "High-End Aesthetics",
+                    heroDesc: "Specializing in 8K ultra-HD commercial imagery and avant-garde aesthetics. Inspired by master photographers and top-tier runways (Balenciaga, YSL, Dior), we simulate Canon 5D4 color depth and f/8 studio lighting. We deliver pure, zero-distortion, high-end commercial visual solutions.",
+                    exploreWorks: "Explore Campaigns",
+                    trusted: "Empowering 100+ Global Brands",
+                    standardsTitle: "Uncompromising Delivery Standards",
+                    standardsDesc: "Beyond basic generation, we pursue the pixel-perfect replication of true photographic art. Every image strictly follows human anatomy and physical fabric properties.",
+                    standard1: "Canon 5D4 Lighting",
+                    standard1Desc: "Simulated 5D4 capture with f/8 aperture. Soft, even 3D studio lighting with zero overexposure or dark corners.",
+                    standard2: "1:7.5 Perfect Anatomy",
+                    standard2Desc: "Strict 1:7.5 golden ratio. Symmetrical features, authentic skin textures, and zero AI distortion or extra limbs.",
+                    standard3: "1:1 Fabric Restoration",
+                    standard3Desc: "Flawless physical draping. Clear textures, natural creases, with absolutely no clipping, stretching, or pattern breaks.",
+                    standard4: "Pure Commercial Grade",
+                    standard4Desc: "Pure white/light grey minimalistic backgrounds. Zero watermarks, text, or clutter. Direct use for e-com.",
+                    standard5: "Global Model Customization",
+                    standard5Desc: "Tailored supermodel faces and natural poses for US, EU, and Asian markets, matching regional luxury vibes.",
+                    standard6: "8K Ultra-Clear Output",
+                    standard6Desc: "Flawless detail retention for massive poster prints and macro-level product detail zooms.",
+                    portfolioTitle: "Campaigns & Editorials",
+                    categories: ["All", "Runway Avant-garde", "Global E-com", "Macro Details", "Apparel Models"],
+                    contactTitle: "Elevate Your",
+                    contactTitle2: "Brand Vision",
+                    contactEmail: "Email",
+                    contactServices: "Our Services",
+                    service1: "• 8K Fashion Model Photography",
+                    service2: "• Global E-commerce Visual Solutions",
+                    service3: "• High-End Product Visualization",
+                    service4: "• S-Tier Brand Poster Design",
+                    formName: "Full Name",
+                    formContact: "Contact",
+                    formDetails: "Project Requirements",
+                    formPlaceholderName: "Your name / Title",
+                    formPlaceholderContact: "WeChat or Phone",
+                    formSubmit: "Send Inquiry",
+                    footerRights: "© 2024 Ht Visual Design Studio. All Rights Reserved."
+                }
+            };
+
+            const t = (key) => translations[lang][key];
+
+            // 替换为100%稳定秒开的顶级商业级图源，完美契合您的摄影标准
+            const projects = [
+                // === 本地实录高定作品 (保留前9张) ===
+                { id: 1, title: 'Avant-garde Runway Campaign', category: lang === 'zh' ? '秀场先锋' : 'Runway Avant-garde', image: '1 (1).jpg', tags: ['Balenciaga Style', '8K'] },
+                { id: 2, title: 'Matte Leather Techwear', category: lang === 'zh' ? '服装实拍' : 'Apparel Models', image: '1 (7).jpg', tags: ['1:7.5 Ratio', 'Techwear'] },
+                { id: 3, title: 'Hardware & Texture Detail', category: lang === 'zh' ? '产品微距' : 'Macro Details', image: '1 (3).jpg', tags: ['Macro Detail', '1:1'] },
+                { id: 4, title: 'Urban Tech Silhouette', category: lang === 'zh' ? '跨境电商' : 'Global E-com', image: '1 (8).jpg', tags: ['Studio Light', 'Canon 5D4'] },
+                { id: 5, title: 'Leather Craft Close-up', category: lang === 'zh' ? '产品微距' : 'Macro Details', image: '1 (5).jpg', tags: ['Leather', 'Real Texture'] },
+                { id: 6, title: 'Studio Minimalist Profile', category: lang === 'zh' ? '服装实拍' : 'Apparel Models', image: '1 (6).jpg', tags: ['Profile', 'Minimalist'] },
+                { id: 7, title: 'Contemporary Outerwear', category: lang === 'zh' ? '秀场先锋' : 'Runway Avant-garde', image: '1 (4).jpg', tags: ['Campaign', 'Avant-garde'] },
+                { id: 8, title: 'Industrial Core Concept', category: lang === 'zh' ? '秀场先锋' : 'Runway Avant-garde', image: '1 (9).jpg', tags: ['Cinematic', 'Drama Light'] },
+                { id: 9, title: 'Silver Tone Portrait', category: lang === 'zh' ? '服装实拍' : 'Apparel Models', image: '1 (2).jpg', tags: ['Silver Tone', 'Commercial'] },
+                
+                // === 新增：2张秀场类型电商风格主图 (8K写实、极简背景、1:7.5比例) ===
+                { 
+                    id: 10, 
+                    title: 'Runway Hero Image 01', 
+                    category: lang === 'zh' ? '跨境电商' : 'Global E-com', 
+                    image: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=800&auto=format&fit=crop', 
+                    tags: ['秀场电商', '1:7.5头身'] 
+                },
+                { 
+                    id: 11, 
+                    title: 'Avant-garde E-com Hero', 
+                    category: lang === 'zh' ? '秀场先锋' : 'Runway Avant-garde', 
+                    image: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?q=80&w=800&auto=format&fit=crop', 
+                    tags: ['高级灰影棚', '商品主图'] 
+                }
+            ];
+
+            const filteredProjects = activeTab === '全部' || activeTab === 'All'
+                ? projects 
+                : projects.filter(p => p.category === activeTab);
+
+            useEffect(() => {
+                const handleScroll = () => setIsScrolled(window.scrollY > 50);
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+
+            return (
+                <div className="min-h-screen">
+                    <div className="fixed inset-0 pointer-events-none z-[9999] opacity-[0.03] noise-bg"></div>
+
+                    {/* 导航栏 */}
+                    <nav className={`fixed w-full z-50 transition-all duration-500 ${isScrolled ? 'bg-white/90 backdrop-blur-xl border-b border-black/5 py-4' : 'bg-transparent py-8'}`}>
+                        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+                            <div className="text-xl font-bold tracking-[0.2em] uppercase">
+                                Ht <span className="text-blue-600">Visual</span>
+                            </div>
+                            <div className="hidden md:flex items-center space-x-8 text-[11px] font-bold tracking-widest uppercase">
+                                <a href="#home" className="hover:text-blue-600 transition-colors">{t('navIntro')}</a>
+                                <a href="#standard" className="hover:text-blue-600 transition-colors">{t('navStandards')}</a>
+                                <a href="#works" className="hover:text-blue-600 transition-colors">{t('navPortfolio')}</a>
+                                
+                                <button 
+                                    onClick={() => {
+                                        setLang(lang === 'zh' ? 'en' : 'zh');
+                                        setActiveTab(lang === 'zh' ? 'All' : '全部');
+                                    }}
+                                    className="flex items-center space-x-2 px-3 py-1 border border-black/10 rounded-full hover:bg-black hover:text-white transition-all text-[10px]"
+                                >
+                                    <Icon name="Languages" className="w-3 h-3" />
+                                    <span>{lang === 'zh' ? 'English' : '中文'}</span>
+                                </button>
+
+                                <a href="#contact" className="group flex items-center space-x-1 px-6 py-2 bg-black text-white rounded-full hover:bg-blue-600 transition-all">
+                                    <span>{t('navConnect')}</span>
+                                    <Icon name="ArrowUpRight" className="w-3 h-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                                </a>
+                            </div>
+                        </div>
+                    </nav>
+
+                    {/* Hero Section */}
+                    <section id="home" className="relative min-h-screen flex items-center pt-20 overflow-hidden">
+                        <div className="max-w-7xl mx-auto px-6 w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                            <div className="lg:col-span-7 z-10">
+                                <div className="inline-flex items-center space-x-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold tracking-widest uppercase mb-8">
+                                    <Icon name="Sparkles" className="w-3 h-3" />
+                                    <span>{t('heroBadge')}</span>
+                                </div>
+                                <h1 className="text-4xl md:text-[5rem] font-medium leading-[1.1] mb-10 tracking-tight">
+                                    {t('heroTitle1')} <span className="italic text-blue-600 font-serif-sc font-bold">{t('heroTitle2')}</span>
+                                </h1>
+                                <p className="text-lg md:text-xl text-slate-500 max-w-xl leading-relaxed font-light mb-12">
+                                    {t('heroDesc')}
+                                </p>
+                                <div className="flex flex-wrap gap-6">
+                                    <a href="#works" className="px-10 py-5 bg-black text-white text-xs font-bold tracking-widest uppercase hover:bg-blue-600 transition-all">
+                                        {t('exploreWorks')}
+                                    </a>
+                                </div>
+                            </div>
+                            <div className="lg:col-span-5 relative">
+                                <div className="relative aspect-[4/5] bg-white rounded-2xl shadow-2xl shadow-black/5 overflow-hidden group border border-black/5">
+                                    <img src="1 (1).jpg" alt="Hero" className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                                    <div className="absolute bottom-6 left-6 right-6 p-5 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl text-white">
+                                        <p className="text-sm font-medium italic">Shot on Canon 5D Mark IV | Studio f/8.0</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Standards */}
+                    <section id="standard" className="py-32 bg-white">
+                        <div className="max-w-7xl mx-auto px-6">
+                            <div className="flex flex-col md:flex-row md:items-end justify-between mb-24 gap-8">
+                                <div className="max-w-2xl">
+                                    <h2 className="text-4xl md:text-5xl font-medium tracking-tight mb-6">{t('standardsTitle')}</h2>
+                                    <p className="text-slate-500 text-lg font-light leading-relaxed">
+                                        {t('standardsDesc')}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-slate-100 border border-slate-100 overflow-hidden rounded-3xl">
+                                {[
+                                    { icon: "Focus", title: t('standard1'), desc: t('standard1Desc') },
+                                    { icon: "User", title: t('standard2'), desc: t('standard2Desc') },
+                                    { icon: "ShoppingBag", title: t('standard3'), desc: t('standard3Desc') },
+                                    { icon: "ShieldCheck", title: t('standard4'), desc: t('standard4Desc') },
+                                    { icon: "Zap", title: t('standard5'), desc: t('standard5Desc') },
+                                    { icon: "Maximize2", title: t('standard6'), desc: t('standard6Desc') }
+                                ].map((item, index) => (
+                                    <div key={index} className="bg-white p-12 hover:bg-slate-50 transition-colors group">
+                                        <div className="text-blue-600 mb-8 transition-transform group-hover:scale-110 duration-500">
+                                            <Icon name={item.icon} className="w-8 h-8" />
+                                        </div>
+                                        <h3 className="text-xl font-medium mb-4">{item.title}</h3>
+                                        <p className="text-slate-500 font-light leading-relaxed text-sm">{item.desc}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Portfolio Grid */}
+                    <section id="works" className="py-32 bg-[#F9F8F6]">
+                        <div className="max-w-7xl mx-auto px-6">
+                            <div className="flex flex-col md:flex-row justify-between items-center mb-20 gap-8">
+                                <h2 className="text-4xl font-serif-sc italic font-bold">{t('portfolioTitle')}</h2>
+                                <div className="flex flex-wrap justify-center gap-6 border-b border-slate-200">
+                                    {t('categories').map(cat => (
+                                        <button 
+                                            key={cat}
+                                            onClick={() => setActiveTab(cat)}
+                                            className={`text-[10px] uppercase tracking-[0.2em] font-bold pb-4 transition-all relative ${activeTab === cat ? 'text-blue-600' : 'text-slate-400 hover:text-black'}`}
+                                        >
+                                            {cat}
+                                            {activeTab === cat && <div className="absolute bottom-[-1px] left-0 w-full h-0.5 bg-blue-600"></div>}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {filteredProjects.map(project => (
+                                    <div key={project.id} className="group relative bg-white overflow-hidden rounded-2xl cursor-pointer shadow-sm border border-black/5">
+                                        <div className="relative aspect-3-4 overflow-hidden bg-slate-100 flex items-center justify-center">
+                                            <div className="absolute animate-pulse w-10 h-10 border-4 border-slate-200 border-t-blue-600 rounded-full"></div>
+                                            <img src={project.image} alt={project.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 z-10" loading="lazy" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-end p-8 z-20">
+                                                <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500 text-white">
+                                                    <div className="flex flex-wrap gap-2 mb-4">
+                                                        {project.tags.map(tag => (
+                                                            <span key={tag} className="text-[9px] uppercase tracking-widest bg-white/10 backdrop-blur-md text-white border border-white/20 px-2 py-1 rounded-sm">{tag}</span>
+                                                        ))}
+                                                    </div>
+                                                    <h3 className="text-xl font-medium tracking-wide">{project.title}</h3>
+                                                    <p className="text-white/60 text-[10px] uppercase tracking-widest mt-2">{project.category}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Contact Form */}
+                    <section id="contact" className="py-32 bg-[#1A1A1A] text-white">
+                        <div className="max-w-7xl mx-auto px-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+                                <div>
+                                    <h2 className="text-5xl md:text-7xl font-light mb-12 leading-tight tracking-tighter">
+                                        {t('contactTitle')} <br />
+                                        <span className="font-serif-sc italic text-blue-500 font-bold">{t('contactTitle2')}</span>
+                                    </h2>
+                                    <div className="space-y-12">
+                                        <div>
+                                            <p className="text-slate-500 text-[10px] uppercase tracking-[0.3em] mb-3 font-bold">{t('contactEmail')}</p>
+                                            <p className="text-2xl md:text-3xl font-light border-b border-white/10 pb-2 inline-block">3274399515@qq.com</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-slate-500 text-[10px] uppercase tracking-[0.3em] mb-6 font-bold">{t('contactServices')}</p>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm font-light text-slate-300">
+                                                <span>{t('service1')}</span>
+                                                <span>{t('service2')}</span>
+                                                <span>{t('service3')}</span>
+                                                <span>{t('service4')}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="p-10 md:p-14 border border-white/10 rounded-3xl bg-white/[0.01] backdrop-blur-sm relative">
+                                    <form className="space-y-8" onSubmit={(e) => e.preventDefault()}>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">{t('formName')}</label>
+                                            <input type="text" className="w-full bg-transparent border-b border-white/10 py-3 focus:outline-none focus:border-blue-500 transition-all font-light" placeholder={t('formPlaceholderName')} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">{t('formContact')}</label>
+                                            <input type="text" className="w-full bg-transparent border-b border-white/10 py-3 focus:outline-none focus:border-blue-500 transition-all font-light" placeholder={t('formPlaceholderContact')} />
+                                        </div>
+                                        <button className="w-full py-5 bg-white text-black text-[11px] font-bold tracking-[0.2em] uppercase hover:bg-blue-600 hover:text-white transition-all">
+                                            {t('formSubmit')}
+                                        </button>
+                                    </form>
+                                    <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4/5 h-4/5 bg-blue-600/10 blur-[100px] rounded-full"></div>
+                                </div>
+                            </div>
+                            <footer className="mt-32 pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+                                <p className="text-[10px] text-slate-500 uppercase tracking-widest">{t('footerRights')}</p>
+                                <div className="flex space-x-8 text-[10px] uppercase tracking-widest text-slate-500">
+                                    <span className="hover:text-white cursor-pointer transition-colors">BEHANCE</span>
+                                    <span className="hover:text-white cursor-pointer transition-colors">XIAOHONGSHU</span>
+                                </div>
+                            </footer>
+                        </div>
+                    </section>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
